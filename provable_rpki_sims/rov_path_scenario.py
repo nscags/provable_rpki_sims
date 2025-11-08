@@ -5,7 +5,7 @@ from roa_checker import ROA
 
 from bgpy.simulation_framework import Scenario, ScenarioConfig
 from bgpy.simulation_engine import BaseSimulationEngine, Announcement as Ann
-from bgpy.enums import SpecialPercentAdoptions, Relationships, Timestamps, Prefixes
+from bgpy.enums import SpecialPercentAdoptions, Timestamps, Prefixes, ASGroups
 
 
 
@@ -22,13 +22,13 @@ class ROVPathScenario(Scenario):
         attacker_asns: frozenset[int] | None = None,
         victim_asns: frozenset[int] | None = None,
         adopting_asns: frozenset[int] | None = None,
-        rp_asns: frozenset[int] | None = None
+        rp_asns: frozenset[int] | None = None,
     ):
         """inits attrs
 
         Any kwarg prefixed with default is only required for the test suite/YAML
         """
-
+        self.engine = engine
         # Config's ScenarioCls must be the same as instantiated Scenario
         assert scenario_config.ScenarioCls == self.__class__, (
             "The config's scenario class is "
@@ -173,7 +173,7 @@ class ROVPathScenario(Scenario):
             adopting_asns: set[int] = set(self.adopting_asns)
             for rp_asn in self.rp_asns:
                 rp_as_obj = engine.as_graph.as_dict[rp_asn]
-                for prefix, ann in rp_as_obj.policy._local_rib.data.items():
+                for prefix, ann in rp_as_obj.policy.local_rib.data.items():
                     if prefix == Prefixes.PREFIX.value:
                         for asn in ann.as_path:
                             adopting_asns.add(asn)
@@ -199,3 +199,21 @@ class ROVPathScenario(Scenario):
             self.announcements = tuple(announcements)
             self.setup_engine(engine)
             engine.ready_to_run_round = 1
+
+
+    @property
+    def untracked_asns(self) -> frozenset[int]:
+        """
+        We only track whether the relying party was hijacked
+        """
+        all_asns = self.engine.as_graph.asn_groups[
+            ASGroups.ALL_WOUT_IXPS.value
+        ]
+        return all_asns - self.rp_asns 
+    
+    @property
+    def _untracked_asns(self) -> frozenset[int]:
+        """
+        We only track whether the relying party was hijacked
+        """
+        return self.untracked_asns

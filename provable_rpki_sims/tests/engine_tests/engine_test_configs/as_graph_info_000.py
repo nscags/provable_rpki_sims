@@ -27,10 +27,4 @@ as_graph_info_000 = ASGraphInfo(
             CPLink(provider_asn=9, customer_asn=10),
         ]
     ),
-    # diagram_ranks=(
-    #     (ASNs.ATTACKER.value, ASNs.VICTIM.value),
-    #     (1, 2, 3, 4),
-    #     (5, 8, 9, 10),
-    #     (ASNs.REFLECTOR.value, 12),
-    # ),
 )
